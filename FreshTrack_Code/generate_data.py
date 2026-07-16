@@ -1,8 +1,6 @@
 """
 generate_data.py
 =================
-Builds a synthetic household grocery dataset for FreshTrack's ML models.
-
 Real Teachable-Machine-style photo data isn't available for a student
 project, but the *downstream* ML pipeline (regression, classification,
 clustering) needs real numeric/categorical data to train on. This script
