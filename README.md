@@ -69,6 +69,9 @@ Users photograph their groceries or a receipt after a shopping trip. FreshTrack 
 
 Household food waste is a solvable, everyday problem — not just an industrial-scale one. FreshTrack lowers the effort of tracking groceries to a single photo, making waste prevention a habit rather than a chore. A lightweight AI stack (image recognition + OCR + a shelf-life lookup) is enough to deliver real value without heavy infrastructure.
 
+## Link
+- Drive link : https://drive.google.com/drive/folders/15SDIwUUQadIT8M_81i2wZHFa7OJA27E2
+
 ## Team
 
 - **Team Lead:** Vasukumar Chauhan
