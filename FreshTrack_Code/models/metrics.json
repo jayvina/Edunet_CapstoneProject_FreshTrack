@@ -1,0 +1,41 @@
+{
+  "regression": {
+    "mae_days": 1.75,
+    "r2_score": 0.983
+  },
+  "classification": {
+    "accuracy": 0.847,
+    "precision": 0.607,
+    "recall": 0.697,
+    "f1_score": 0.649
+  },
+  "clustering": {
+    "silhouette_score": 0.561,
+    "clusters": {
+      "0": {
+        "avg_shelf_life": 7.65,
+        "avg_moisture": 0.7,
+        "avg_perishability": 8.19,
+        "waste_rate": 0.2,
+        "count": 1829,
+        "risk_label": "High risk (use within days)"
+      },
+      "1": {
+        "avg_shelf_life": 30.03,
+        "avg_moisture": 0.28,
+        "avg_perishability": 3.29,
+        "waste_rate": 0.2,
+        "count": 1156,
+        "risk_label": "Medium risk"
+      },
+      "2": {
+        "avg_shelf_life": 318.8,
+        "avg_moisture": 0.05,
+        "avg_perishability": 1.13,
+        "waste_rate": 0.13,
+        "count": 15,
+        "risk_label": "Low risk (long shelf life)"
+      }
+    }
+  }
+}

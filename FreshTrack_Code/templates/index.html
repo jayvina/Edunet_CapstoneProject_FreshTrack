@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshTrack AI — Intelligent Food Waste Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0d0f;
+            --panel-bg: rgba(18, 22, 28, 0.7);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.15);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Layout Grid */
+        .app-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        header {
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), #34d399);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #ffffff, #a7f3d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Stats Strip */
+        .stats-strip {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .stat-badge {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            backdrop-filter: blur(12px);
+        }
+
+        .stat-badge span:first-child {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-badge span:last-child {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Cards & Panels */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-left: 3px solid var(--primary);
+            padding-left: 0.75rem;
+        }
+
+        /* Column Left */
+        .col-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Upload Receipt Zone */
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            transition: var(--transition);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.04);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        .upload-zone p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .upload-zone span {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Scanner Animation Overlay */
+        .scanner-container {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 13, 15, 0.95);
+            z-index: 10;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .preview-img {
+            max-height: 80%;
+            max-width: 80%;
+            border-radius: 8px;
+            object-fit: contain;
+            border: 1px solid var(--border-color);
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to bottom, rgba(16, 185, 129, 0.8), rgba(16, 185, 129, 0));
+            box-shadow: 0 0 15px var(--primary);
+            animation: scan 2s infinite ease-in-out;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 98%; }
+            100% { top: 0%; }
+        }
+
+        .scan-status {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Model Metrics Dashboard */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .metric-card h4 {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Column Right */
+        .col-right {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Form */
+        .quick-add {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        input, select {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+        }
+
+        button.btn-primary {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 0 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            align-self: flex-end;
+            height: 38px;
+        }
+
+        button.btn-primary:hover {
+            background: #059669;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Table & Lists */
+        .table-container {
+            max-height: 480px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.01);
+            cursor: pointer;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .badge-urgent {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge-safe {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* Action Buttons */
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.6rem;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-action.btn-use:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-action.btn-waste:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* Right Panel Split */
+        .split-pane {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Recipes Panel */
+        .recipe-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .recipe-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recipe-item::before {
+            content: "🍳";
+        }
+
+        /* Hidden Input */
+        #file-input {
+            display: none;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+        .empty-inv {
+            color: var(--text-secondary);
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo-section">
+                <div class="logo-icon">🌿</div>
+                <div class="logo-text">
+                    <h1>FreshTrack AI</h1>
+                    <p>Dynamic Food Waste Analytics Dashboard</p>
+                </div>
+            </div>
+            <div class="stats-strip">
+                <div class="stat-badge">
+                    <span>Active Stock</span>
+                    <span id="stat-active">0</span>
+                </div>
+                <div class="stat-badge">
+                    <span>Used / Wasted</span>
+                    <span id="stat-ratio" style="color: var(--warning);">0 / 0</span>
+                </div>
+                <div class="stat-badge">
+                    <span>Waste Rate</span>
+                    <span id="stat-waste-rate" style="color: var(--danger);">0%</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Column Left: Actions & Upload -->
+        <div class="col-left">
+            <!-- Receipt Uploader -->
+            <div class="panel">
+                <h3 class="panel-title">Upload Grocery Bill Image</h3>
+                <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📷</div>
+                    <p><span>Click to upload</span> or drag and drop your grocery receipt photo</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary);">Supports PNG, JPG, JPEG</p>
+                    <input type="file" id="file-input" accept="image/*">
+                    
+                    <!-- Scanner Overlay -->
+                    <div class="scanner-container" id="scanner">
+                        <img id="preview" class="preview-img" src="" alt="Receipt Preview">
+                        <div class="scan-line"></div>
+                        <div class="scan-status" id="scan-text">Scanning Receipt Text...</div>
+                    </div>
+                </div>
+                
+                <!-- Demo Upload Helper -->
+                <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+                    <span>Want to test immediately?</span>
+                    <button class="btn-action" onclick="loadSampleReceipt()" style="border-color: var(--primary); color: var(--primary);">Use Sample Receipt</button>
+                </div>
+            </div>
+
+            <!-- Model Report Summary -->
+            <div class="panel">
+                <h3 class="panel-title">AI Engine Status</h3>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h4>Shelf Life Regression</h4>
+                        <div class="metric-value" id="metrics-r2">0.0</div>
+                        <div class="metric-sub">R² Score (Random Forest)</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Waste Risk Classifier</h4>
+                        <div class="metric-value" id="metrics-acc">0%</div>
+                        <div class="metric-sub">Accuracy (Random Forest)</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Clustering (KMeans)</h4>
+                        <div class="metric-value" id="metrics-sil">0.0</div>
+                        <div class="metric-sub">Silhouette Separation</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Usage Speed Multiplier</h4>
+                        <div class="metric-value" id="metrics-speed">1.0</div>
+                        <div class="metric-sub">Household behavior bias</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column Right: Inventory & Recipe View -->
+        <div class="col-right">
+            <!-- Quick Manual Add -->
+            <div class="panel">
+                <h3 class="panel-title">Add Grocery Manually</h3>
+                <form class="quick-add" id="manual-add-form" onsubmit="addManualItem(event)">
+                    <div class="input-group">
+                        <label>Item Name</label>
+                        <input type="text" id="manual-name" placeholder="e.g. fresh bread" required>
+                    </div>
+                    <div class="input-group" style="max-width: 140px;">
+                        <label>Storage Type</label>
+                        <select id="manual-storage">
+                            <option value="fridge">Fridge</option>
+                            <option value="pantry">Pantry</option>
+                            <option value="freezer">Freezer</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="max-width: 80px;">
+                        <label>Quantity</label>
+                        <input type="number" id="manual-qty" min="1" value="1" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Item</button>
+                </form>
+            </div>
+
+            <!-- Inventory View -->
+            <div class="panel" style="flex: 1;">
+                <h3 class="panel-title">Current Kitchen Stock</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Storage</th>
+                                <th>Expiry / Shelf Life</th>
+                                <th>Waste Risk</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-list">
+                            <tr>
+                                <td colspan="6" class="text-center empty-inv">Loading stock list...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Split Panel: Suggestions & Details -->
+            <div class="split-pane">
+                <div class="panel">
+                    <h3 class="panel-title">AI Recipe Suggestions</h3>
+                    <div class="recipe-list" id="recipes-box">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Click any item in your inventory to see customized recipes.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3 class="panel-title">Model Risk Groups</h3>
+                    <div class="recipe-list" id="clusters-box" style="font-size: 0.8rem; color: var(--text-secondary);">
+                        <!-- Dynamic clustering list -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let appData = {};
+
+        // Fetch Inventory and display data
+        async function fetchInventory() {
+            try {
+                const response = await fetch('/api/inventory');
+                appData = await response.json();
+                renderInventory();
+                renderMetrics();
+            } catch (err) {
+                console.error("Failed to load inventory data", err);
+            }
+        }
+
+        // Render Inventory Stock Table
+        function renderInventory() {
+            const list = document.getElementById("inventory-list");
+            list.innerHTML = "";
+
+            if (!appData.items || appData.items.length === 0) {
+                list.innerHTML = `<tr><td colspan="6" class="text-center empty-inv">Your inventory is empty. Upload a receipt or add items manually!</td></tr>`;
+                return;
+            }
+
+            appData.items.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.onclick = () => showRecipes(item.category, item.name);
+
+                let badgeClass = "badge-safe";
+                if (item.risk_cluster.toLowerCase().includes("high")) {
+                    badgeClass = "badge-urgent";
+                } else if (item.risk_cluster.toLowerCase().includes("medium")) {
+                    badgeClass = "badge-warning";
+                }
+
+                tr.innerHTML = `
+                    <td><strong>${item.name}</strong> <span style="font-size: 0.75rem; color: var(--text-secondary)">x${item.quantity}</span></td>
+                    <td style="color: var(--text-secondary); text-transform: capitalize;">${item.category}</td>
+                    <td style="text-transform: capitalize;"><span style="font-size: 0.8rem;">📦</span> ${item.storage_type}</td>
+                    <td>
+                        <div>${item.expiry_estimate}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary)">${item.predicted_shelf_life_days} days predicted</div>
+                    </td>
+                    <td>
+                        <span class="badge ${badgeClass}">${item.risk_cluster}</span>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">${Math.round(item.waste_risk_probability * 100)}% risk</div>
+                    </td>
+                    <td class="actions-cell" onclick="event.stopPropagation()">
+                        <button class="btn-action btn-use" onclick="logAction('${item.name}', 'used')">Used</button>
+                        <button class="btn-action btn-waste" onclick="logAction('${item.name}', 'wasted')">Wasted</button>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+
+            // Update aggregates
+            document.getElementById("stat-active").innerText = appData.aggregates.total_active;
+            document.getElementById("stat-ratio").innerText = `${appData.aggregates.used} / ${appData.aggregates.wasted}`;
+            document.getElementById("stat-waste-rate").innerText = `${appData.aggregates.waste_rate}%`;
+        }
+
+        // Render ML Metrics cards
+        function renderMetrics() {
+            const m = appData.model_metrics;
+            document.getElementById("metrics-r2").innerText = m.regression.r2_score;
+            document.getElementById("metrics-acc").innerText = `${Math.round(m.classification.accuracy * 100)}%`;
+            document.getElementById("metrics-sil").innerText = m.clustering.silhouette_score;
+            document.getElementById("metrics-speed").innerText = appData.household_usage_speed;
+
+            // Render clustering details
+            const clusterBox = document.getElementById("clusters-box");
+            clusterBox.innerHTML = "";
+            const clusters = m.clustering.clusters;
+            Object.keys(clusters).forEach(id => {
+                const c = clusters[id];
+                const item = document.createElement("div");
+                item.className = "recipe-item";
+                item.style.borderLeft = `3px solid ${id === '0' ? 'var(--danger)' : id === '1' ? 'var(--warning)' : 'var(--primary)'}`;
+                item.innerHTML = `
+                    <div style="flex: 1;">
+                        <strong>${c.risk_label}</strong> (n=${c.count})
+                        <div style="font-size: 0.75rem; color: var(--text-secondary)">Shelf life: ${c.avg_shelf_life}d average | waste: ${Math.round(c.waste_rate * 100)}%</div>
+                    </div>
+                `;
+                clusterBox.appendChild(item);
+            });
+        }
+
+        // Display Recipes when item clicked
+        function showRecipes(category, name) {
+            const box = document.getElementById("recipes-box");
+            box.innerHTML = "";
+            
+            const categoryRecipes = appData.recipes[category] || ["Use standard cooking method"];
+            
+            const title = document.createElement("div");
+            title.style.fontWeight = "600";
+            title.style.fontSize = "0.85rem";
+            title.style.marginBottom = "0.25rem";
+            title.innerText = `For ${name}:`;
+            box.appendChild(title);
+
+            categoryRecipes.forEach(recipe => {
+                const item = document.createElement("div");
+                item.className = "recipe-item";
+                item.innerText = recipe;
+                box.appendChild(item);
+            });
+        }
+
+        // Perform Used / Wasted actions
+        async function logAction(name, action) {
+            try {
+                const response = await fetch('/api/inventory/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, action })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    fetchInventory();
+                }
+            } catch (err) {
+                console.error("Action logs failed", err);
+            }
+        }
+
+        // Manual Add Form submission
+        async function addManualItem(e) {
+            e.preventDefault();
+            const name = document.getElementById("manual-name").value;
+            const storage = document.getElementById("manual-storage").value;
+            const quantity = parseInt(document.getElementById("manual-qty").value);
+
+            try {
+                const response = await fetch('/api/inventory/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, storage, quantity })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById("manual-add-form").reset();
+                    fetchInventory();
+                }
+            } catch (err) {
+                console.error("Add item failed", err);
+            }
+        }
+
+        // Drag and drop image upload setup
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const scanner = document.getElementById('scanner');
+        const preview = document.getElementById('preview');
+        const scanText = document.getElementById('scan-text');
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        // Trigger file upload and scan visualization
+        function handleFileUpload(file) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = function() {
+                preview.src = reader.result;
+                scanner.style.display = 'flex';
+                
+                // Animate scanner phase 1: reading image
+                scanText.innerText = "Extracting receipt text via OCR...";
+                
+                setTimeout(() => {
+                    scanText.innerText = "Classifying items via ML pipelines...";
+                }, 1500);
+
+                // Perform actual upload API call
+                const formData = new FormData();
+                formData.append('file', file);
+
+                setTimeout(async () => {
+                    try {
+                        const response = await fetch('/api/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            scanText.innerText = `Success! Imported ${result.imported_count} products.`;
+                            setTimeout(() => {
+                                scanner.style.display = 'none';
+                                fetchInventory();
+                            }, 1000);
+                        } else {
+                            alert("Upload error: " + result.error);
+                            scanner.style.display = 'none';
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert("Scan failed to process.");
+                        scanner.style.display = 'none';
+                    }
+                }, 3000);
+            }
+        }
+
+        // Helper to load sample bill image from project dir
+        async function loadSampleReceipt() {
+            try {
+                // Fetch the sample bill file as a blob
+                const response = await fetch('/static/sample_receipt.png');
+                if (!response.ok) {
+                    // Try direct matching or fallback if static is not loaded
+                    const mockFile = new File(["receipt"], "sample_receipt.png", { type: "image/png" });
+                    handleFileUpload(mockFile);
+                    return;
+                }
+                const blob = await response.blob();
+                const file = new File([blob], "sample_receipt.png", { type: "image/png" });
+                handleFileUpload(file);
+            } catch (err) {
+                console.warn("Static file fetching failed. Falling back to mock file upload.");
+                const mockFile = new File(["receipt"], "sample_receipt.png", { type: "image/png" });
+                handleFileUpload(mockFile);
+            }
+        }
+
+        // Initial setup
+        window.onload = fetchInventory;
+    </script>
+</body>
+</html>
