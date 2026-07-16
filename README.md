@@ -1,79 +1,72 @@
-# FreshTrack 🥦📸
+# FreshTrack — AI/ML Edition
 
-**AI-powered kitchen assistant that turns food-waste prevention into a habit — not a guessing game.**
+Full machine-learning upgrade of the FreshTrack food-waste tracker
+(Edunet Foundation project). Instead of a hardcoded shelf-life lookup
+table, this version trains and uses three real ML models:
 
-FreshTrack helps households track groceries, predicts when items will spoil, and nudges users to use food before it's wasted — all from a single photo, with zero extra hardware.
+| Model | Algorithm | Task |
+|---|---|---|
+| Shelf-life predictor | `RandomForestRegressor` | Predicts how many days an item will last, given category, storage type, temperature, moisture, and perishability |
+| Waste-risk predictor | `RandomForestClassifier` | Predicts the probability an item will be wasted before it's used, learning from a per-household usage-speed feature |
+| Waste-risk clustering | `KMeans` (k=3) | Groups items into **High / Medium / Low** waste-risk clusters based on shelf life, moisture, and perishability |
 
----
-
-## 🚩 The Problem
-
-Nearly a third of all food produced globally is wasted, and a huge chunk of that happens right at home — groceries get forgotten, expiry dates slip by, and leftovers get binned simply because nobody was tracking what needed to be used. Every wasted item also wastes the water, energy, and emissions that went into producing it.
-
-## The Solution
-
-Users photograph their groceries or a receipt after a shopping trip. FreshTrack identifies the items, estimates how long each will stay fresh, and builds a running **"use-it-soon" list** — with reminders before things spoil and recipe suggestions built around what's about to expire.
-
-## Key Features
-
-- 📸 **Zero manual entry** — one photo of groceries or a receipt logs the whole haul via OCR + image recognition
-- 🔮 **Predictive, not reactive** — shelf-life estimates warn users *before* food spoils, not after
-- 🍽 **Turns waste into meals** — expiring items automatically surface as recipe suggestions
-- 📈 **Learns over time** — a waste log lets users mark what was actually thrown out, sharpening future predictions
-
-## How It Works
+## How the pieces fit together
 
 ```
-📷 Capture  →  🔎 Recognize  →  📅 Predict  →  🔔 Remind  →  🍳 Suggest
+generate_data.py   -> freshtrack_dataset.csv   (3000 synthetic grocery records)
+train_models.py    -> models/*.joblib, models/metrics.json, plots/*.png
+freshtrack_ml.py    -> interactive app that loads the trained models
 ```
 
-1. **Capture** — photo of groceries or a receipt
-2. **Recognize** — a CNN classifies items / OCR reads receipt text
-3. **Predict** — shelf-life lookup per food category
-4. **Remind** — use-it-soon list + daily/weekly alerts
-5. **Suggest** — recipes built around expiring items
+## Setup
 
-🔁 **Feedback loop:** users log what was actually thrown away in the Waste Log, and the shelf-life model recalibrates over time.
+```bash
+pip install -r requirements.txt
+python generate_data.py     # builds the training dataset
+python train_models.py      # trains regression + classification + clustering, saves plots
+python freshtrack_ml.py      # run the app
+```
 
-## Who It's For
+## What each script does
 
-- **Households** — cutting grocery bills and waste week to week
-- **Hostels & mess canteens** — tracking bulk perishables for large groups
-- **Small restaurants & cafés** — managing perishable inventory without expensive POS systems
-- **Sustainability communities** — apartments and eco-groups running waste-reduction drives
+**`generate_data.py`** — Builds a synthetic dataset that mirrors what
+FreshTrack's real waste log would look like over time: 17 food
+categories x 3 storage types, with realistic moisture/perishability
+profiles and a simulated household usage-speed pattern that determines
+whether each item actually got wasted.
 
-## Tech Stack
+**`train_models.py`** — Trains all three models, evaluates them
+(MAE/R² for regression; accuracy/precision/recall/F1 for
+classification; silhouette score for clustering), and saves:
+- `models/shelf_life_regressor.joblib`
+- `models/waste_risk_classifier.joblib`
+- `models/cluster_model.joblib`
+- `models/metrics.json`
+- `plots/clusters.png` — PCA-projected scatter of the 3 waste-risk clusters
+- `plots/confusion_matrix.png` — classifier performance
+- `plots/feature_importance.png` — which features drive waste risk most
 
-**Software & AI**
-- Python — core language
-- Teachable Machine / CNN (TensorFlow-Keras) — classifies food items from photos
-- Tesseract OCR — reads receipt text
-- Rule-based shelf-life lookup — beginner-safe, upgradable to a full ML model
-- Streamlit — dashboard for reminders, waste log, and recipes
+**`freshtrack_ml.py`** — The app. Menu-driven CLI with:
+1. Add item -> ML predicts shelf life, waste-risk %, and cluster group
+2. Use-It-Soon reminder list, sorted by urgency *and* ML waste-risk score
+3. Recipe suggestions per category
+4. Mark used / log wasted — every logged item updates this household's
+   usage-speed profile, which feeds back into future predictions (this
+   is the "waste log improves predictions over time" feature from the
+   original report, now actually implemented with a live signal instead
+   of a static average)
+5. Waste summary
+6. Full inventory view
+7. ML model report — prints regression/classification metrics and
+   cluster stats on demand
 
-**Hardware**
-- Just a smartphone or laptop camera — no sensors or microcontrollers required
+## On the image-recognition step
 
-**Data**
-- Self-collected grocery photo dataset
-- USDA FoodKeeper shelf-life reference data
-
-## Future Perspective
-
-- 📡 **Smart fridge integration** — auto inventory updates via smart-fridge sensors
-- 🤝 **Community food-sharing** — let neighbors claim surplus food nearing expiry
-- 🧾 **Retailer partnerships** — pull structured expiry data from e-receipts and loyalty apps
-- 🌎 **Regional shelf-life models** — localize predictions for climate, diet, and produce variety
-
-## Conclusion
-
-Household food waste is a solvable, everyday problem — not just an industrial-scale one. FreshTrack lowers the effort of tracking groceries to a single photo, making waste prevention a habit rather than a chore. A lightweight AI stack (image recognition + OCR + a shelf-life lookup) is enough to deliver real value without heavy infrastructure.
-
-## Team
-
-- **Team Lead:** Vasukumar Chauhan
-- **Team Member:** Jayvina Dhedhi
-- **Mentor:** Sagar Chouhan
-- **College:** V.V.P. Engineering College, Rajkot
-
----
+The original report specifies a Teachable Machine (TensorFlow/Keras)
+model to identify items from photos. That step is simulated here via
+keyword matching (`classify_item()`) so the full pipeline runs without
+needing a camera, dataset of food photos, or GPU. The 3 ML models
+downstream of it (regression, classification, clustering) are real,
+trained on real (synthetic) data — swap `classify_item()` for an actual
+loaded Keras model later and everything downstream keeps working
+unchanged.
